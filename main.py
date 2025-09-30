@@ -54,21 +54,6 @@ prompt_template = ChatPromptTemplate([
 ])
 
 
-llm = ChatGroq(
-    model = "llama-3.1-8b-instant"
-)
-
-research_topic = input("Enter the topic that you want to research about:\n ")
-specific_commands = input("Enter all the specific commands that you want to execute during your research session:\n ")
-
-chatHistory = memory.load_memory_variables({})["chat_history"]
-
-formatted_prompt = prompt_template.invoke({
-    "chat_history":chatHistory,
-    "research_topic": research_topic,
-    "specific_commands_or_focus": specific_commands
-})
-
 '''
 def load_and_split_documents(file_path):
     loader =  PyPDFLoader(file_path)
@@ -83,17 +68,58 @@ embeddings_model = HuggingFaceEmbeddings(
 )
 '''
 
-response = llm.invoke(formatted_prompt.messages)
-
-# Splitting the raw response on basis of Heading **...**
-sections = re.split(r"\n\*\*(.+?)\*\*\n", response.content)
-structured_response = dict()
 
 
-for i in range(1,len(sections), 2):
-    heading=sections[i].strip()
-    content = sections[i+1].strip()
-    structured_response[heading] = content
+llm = ChatGroq(
+    model = "llama-3.1-8b-instant"
+)
+
+while(True):
+    choice = int(input("Enter the number to continue or to quit:\n1.Continue\n2.Exit\n3.Print Conversation Memory\n"))
+
+    if(choice == 2):
+        print("\nExiting the Loop\n")
+        break
+
+    elif (choice==3):
+        print(memory.load_memory_variables({})["chat_history"])
+        continue
 
 
-print(json.dumps(structured_response,indent=2,ensure_ascii=False))
+
+    research_topic = input("Enter the topic that you want to research about:\n ")
+    specific_commands = input("Enter all the specific commands that you want to execute during your research session:\n ")
+
+    chatHistory = memory.load_memory_variables({})["chat_history"]
+
+    formatted_prompt = prompt_template.invoke({
+        "chat_history": chatHistory,
+        "research_topic": research_topic,
+        "specific_commands_or_focus": specific_commands
+    })
+
+    response = llm.invoke(formatted_prompt.messages)
+
+    # Splitting the raw response on basis of Heading **...**
+    sections = re.split(r"\n\*\*(.+?)\*\*\n", response.content)
+    structured_response = dict()
+
+
+    for i in range(1,len(sections), 2):
+        heading=sections[i].strip()
+        content = sections[i+1].strip()
+        structured_response[heading] = content
+
+
+
+    print("\n...Saving to Conversation Memory\n")
+    memory.save_context({
+        "input": f"My research topic is :{research_topic}\nSpecific commands: {specific_commands}"},
+        {"output":response.content}
+    )
+
+    print("\nSaved to Memory Successfully !\n")
+
+    stored_messages = memory.load_memory_variables({})
+
+    print("\n---Stored Conversation Memory ---\n")
