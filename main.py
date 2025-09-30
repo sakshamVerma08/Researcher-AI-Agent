@@ -1,6 +1,7 @@
 import getpass
 import os
 import re
+import json
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain.memory import ConversationBufferMemory
@@ -84,6 +85,15 @@ embeddings_model = HuggingFaceEmbeddings(
 
 response = llm.invoke(formatted_prompt.messages)
 
+# Splitting the raw response on basis of Heading **...**
+sections = re.split(r"\n\*\*(.+?)\*\*\n", response.content)
+structured_response = dict()
 
-print("Response from LLM:\n")
-print(response)
+
+for i in range(1,len(sections), 2):
+    heading=sections[i].strip()
+    content = sections[i+1].strip()
+    structured_response[heading] = content
+
+
+print(json.dumps(structured_response,indent=2,ensure_ascii=False))
