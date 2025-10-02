@@ -89,6 +89,16 @@ while(True):
 
     chatHistory = memory.load_memory_variables({})["chat_history"]
 
+
+    # Attatching the user uploaded document context to prompt 'specific commands' section.
+    context_docs=""
+    if (not retriever == None):
+        docs = search_documents(retriever,research_topic,k=4)
+        context_docs = "\n\n---\n\n".join([d.page_content for d in docs[:4]])
+
+        if(context_docs):
+            specific_commands = f"DOCUMENT_CONTEXT_START\n{context_docs}\nDOCUMENT_CONTEXT_END\n\n{specific_commands}"
+
     formatted_prompt = prompt_template.invoke({
         "chat_history": chatHistory,
         "research_topic": research_topic,
@@ -116,6 +126,7 @@ while(True):
     )
 
     print("\nSaved to Memory Successfully !\n")
+    print(structured_response)
 
     stored_messages = memory.load_memory_variables({})
 

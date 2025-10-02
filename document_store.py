@@ -23,14 +23,14 @@ def load_files_to_docs(paths: List[str]):
 
 
         elif (ext in ("txt","md")):
-            loader = TextLoader(p)
-            loaded = loader.load(p,encoding="utf-8")
+            loader = TextLoader(p, encoding="utf-8")
+            loaded = loader.load()
 
 
         else:
             try:
-                loader = TextLoader(p)
-                loaded = loader.load(p,encodings = "utf-8")
+                loader = TextLoader(p,encoding = "utf-8")
+                loaded = loader.load()
 
             except Exception:
                 print(f"Warning: File type not supported : {p}")
