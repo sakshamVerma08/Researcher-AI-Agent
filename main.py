@@ -1,16 +1,12 @@
 import getpass
 import os
 import re
-import json
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain.memory import ConversationBufferMemory
 from langchain_core.prompts import MessagesPlaceholder
-from langchain.document_loaders import PyPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-# from langchain.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
+from document_store import load_vectorstore, ingest_documents, search_documents
 
 load_dotenv()
 
@@ -54,28 +50,15 @@ prompt_template = ChatPromptTemplate([
 ])
 
 
-'''
-def load_and_split_documents(file_path):
-    loader =  PyPDFLoader(file_path)
-    docs = loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size = 500, size= 50)
-    splitted_text = text_splitter.split(docs)
-    return splitted_text
-
-embeddings_model = HuggingFaceEmbeddings(
-    model_name="thenlper/gte-small",
-    model_kwargs = {"device":"cpu"}
-)
-'''
-
-
-
 llm = ChatGroq(
     model = "llama-3.1-8b-instant"
 )
 
+PERSIST_DIR="vector_store"
+retriever = load_vectorstore(PERSIST_DIR,device="cpu")
+
 while(True):
-    choice = int(input("Enter the number to continue or to quit:\n1.Continue\n2.Exit\n3.Print Conversation Memory\n"))
+    choice = int(input("Enter the number to continue or to quit:\n1.Continue\n2.Exit\n3.Print Conversation Memory\n4.Upload file paths"))
 
     if(choice == 2):
         print("\nExiting the Loop\n")
@@ -85,6 +68,20 @@ while(True):
         print(memory.load_memory_variables({})["chat_history"])
         continue
 
+    elif (choice==4):
+        paths_input = input("Enter file paths separated by comma (eg. ./docs/a.pdf, ./docs/b.pdf, ./textFiles/notes.txt): \n")
+        paths = [p.strip() for p in paths_input.split(",") if p.strip()]
+
+        try:
+            index =ingest_documents(paths,persist_dir=PERSIST_DIR, device="cpu")
+            retriever = index.as_retriever(search_kwargs={"k":4})
+            print("Ingested and saved index to : ", PERSIST_DIR)
+
+        except Exception as e:
+            print("Ingest failed : ", e)
+
+        continue
+ 
 
 
     research_topic = input("Enter the topic that you want to research about:\n ")
