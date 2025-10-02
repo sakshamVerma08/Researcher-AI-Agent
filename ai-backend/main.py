@@ -54,7 +54,7 @@ llm = ChatGroq(
     model = "llama-3.1-8b-instant"
 )
 
-PERSIST_DIR="vector_store"
+PERSIST_DIR= "vector_store"
 retriever = load_vectorstore(PERSIST_DIR,device="cpu")
 
 while(True):

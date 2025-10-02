@@ -1,3 +1,16 @@
-.env
-.idea/*
-vector_store/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+ai-backend/.venv/
+ai-backend/vector_store/
+ai-backend/.env
+
+# IDE
+.idea/
+.vscode/
+
+# Node / Next.js (when client is set up)
+client/node_modules/
+client/.next/
